@@ -1,0 +1,81 @@
+FUNCTION_BLOCK kalpKriziOlasiligiModel
+
+VAR_INPUT
+     uykusuresi: REAL;    // Uyku süresi (saat)
+     yagtuketimi: REAL;  // Aylık yağ tüketimi (porsiyon sayısı)
+END_VAR
+
+VAR_OUTPUT
+     kalpkriziolasiligi: REAL; // Kalp krizi olasılığı (%)
+END_VAR
+
+FUZZIFY uykusuresi
+        TERM cok_az_uyku := (0, 1)(0, 1)(3, 1) (4, 0); 
+        TERM az_uyku := (3, 0) (4, 1) (6, 1) (7, 0);
+        TERM normal_uyku :=  (6,0) (7,1)(8,1)(9,0);
+        TERM cok_uyku := (8, 0) (9, 1) (10, 1) (11, 0);
+        TERM cok_yuksek_uyku := (10, 0) (11, 1) (16, 1) (16, 1);
+END_FUZZIFY
+
+FUZZIFY yagtuketimi
+		
+        TERM cok_dusuk :=(0, 1) (0, 1) (5, 1) (8, 0);
+        TERM dusuk := (5, 0) (8, 1) (10, 1) (12, 0); 
+        TERM orta := (10,0) (15,1) (20,0);
+        TERM yuksek := (18, 0) (20, 1) (30, 1) (35, 0);
+        TERM cok_yuksek := (30, 0) (35, 1) (40, 1) (40, 1); 
+	
+END_FUZZIFY
+
+    
+DEFUZZIFY kalpkriziolasiligi
+        TERM cok_dusuk_olasilik := (0, 1) (0, 1) (10, 1) (15, 0);
+        TERM dusuk_olasilik := (10, 0) (15, 1) (25, 1) (30, 0); 
+        TERM orta_olasilik :=  (25,0) (45,1) (65,0); 
+        TERM yuksek_olasilik := (60, 0) (70, 1) (80, 1) (85, 0); 
+        TERM cok_yuksek_olasilik := (80, 0) (85, 1) (100, 1) (100, 1);
+        METHOD : COG; 
+        DEFAULT := 50;
+END_DEFUZZIFY
+
+
+
+RULEBLOCK kurallar
+        AND : MIN;
+        ACT : MIN;
+        ACCU : MAX; 
+        
+        RULE 1:  IF uykusuresi IS cok_az_uyku AND yagtuketimi IS cok_dusuk THEN kalpkriziolasiligi IS cok_yuksek_olasilik;
+        RULE 2:  IF uykusuresi IS cok_az_uyku AND yagtuketimi IS dusuk THEN kalpkriziolasiligi IS cok_yuksek_olasilik;
+        RULE 3:  IF uykusuresi IS cok_az_uyku AND yagtuketimi IS orta THEN kalpkriziolasiligi IS yuksek_olasilik;
+        RULE 4:  IF uykusuresi IS cok_az_uyku AND yagtuketimi IS yuksek THEN kalpkriziolasiligi IS cok_yuksek_olasilik;
+        RULE 5:  IF uykusuresi IS cok_az_uyku AND yagtuketimi IS cok_yuksek THEN kalpkriziolasiligi IS cok_yuksek_olasilik;
+          
+        RULE 6:  IF uykusuresi IS az_uyku AND yagtuketimi IS cok_dusuk THEN kalpkriziolasiligi IS cok_yuksek_olasilik;
+        RULE 7:  IF uykusuresi IS az_uyku AND yagtuketimi IS dusuk THEN kalpkriziolasiligi IS yuksek_olasilik;
+        RULE 8:  IF uykusuresi IS az_uyku AND yagtuketimi IS orta THEN kalpkriziolasiligi IS yuksek_olasilik;
+        RULE 9:  IF uykusuresi IS az_uyku AND yagtuketimi IS yuksek THEN kalpkriziolasiligi IS cok_yuksek_olasilik;
+        RULE 10: IF uykusuresi IS az_uyku AND yagtuketimi IS cok_yuksek THEN kalpkriziolasiligi IS cok_yuksek_olasilik;
+        
+        RULE 11: IF uykusuresi IS normal_uyku AND yagtuketimi IS cok_dusuk THEN kalpkriziolasiligi IS orta_olasilik;
+        RULE 12: IF uykusuresi IS normal_uyku AND yagtuketimi IS dusuk THEN kalpkriziolasiligi IS cok_dusuk_olasilik;
+        RULE 13: IF uykusuresi IS normal_uyku AND yagtuketimi IS orta THEN kalpkriziolasiligi IS dusuk_olasilik;
+        RULE 14: IF uykusuresi IS normal_uyku AND yagtuketimi IS yuksek THEN kalpkriziolasiligi IS yuksek_olasilik;
+        RULE 15: IF uykusuresi IS normal_uyku AND yagtuketimi IS cok_yuksek THEN kalpkriziolasiligi IS cok_yuksek_olasilik;
+        
+        RULE 16: IF uykusuresi IS cok_uyku AND yagtuketimi IS cok_dusuk THEN kalpkriziolasiligi IS orta_olasilik;
+        RULE 17: IF uykusuresi IS cok_uyku AND yagtuketimi IS dusuk THEN kalpkriziolasiligi IS orta_olasilik;
+        RULE 18: IF uykusuresi IS cok_uyku AND yagtuketimi IS orta THEN kalpkriziolasiligi IS yuksek_olasilik;
+        RULE 19: IF uykusuresi IS cok_uyku AND yagtuketimi IS yuksek THEN kalpkriziolasiligi IS cok_yuksek_olasilik;
+        RULE 20: IF uykusuresi IS cok_uyku AND yagtuketimi IS cok_yuksek THEN kalpkriziolasiligi IS cok_yuksek_olasilik;
+        
+        RULE 21: IF uykusuresi IS cok_yuksek_uyku AND yagtuketimi IS cok_dusuk THEN kalpkriziolasiligi IS cok_yuksek_olasilik;
+        RULE 22: IF uykusuresi IS cok_yuksek_uyku AND yagtuketimi IS dusuk THEN kalpkriziolasiligi IS yuksek_olasilik;
+        RULE 23: IF uykusuresi IS cok_yuksek_uyku AND yagtuketimi IS orta THEN kalpkriziolasiligi IS yuksek_olasilik;
+        RULE 24: IF uykusuresi IS cok_yuksek_uyku AND yagtuketimi IS yuksek THEN kalpkriziolasiligi IS yuksek_olasilik;
+        RULE 25: IF uykusuresi IS cok_yuksek_uyku AND yagtuketimi IS cok_yuksek THEN kalpkriziolasiligi IS cok_yuksek_olasilik;
+END_RULEBLOCK
+
+END_FUNCTION_BLOCK
+
+    
